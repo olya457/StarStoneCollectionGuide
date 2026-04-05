@@ -1,4 +1,4 @@
-package com.starstonecollectionguide
+package com.star.stone.collection.guide
 
 import com.facebook.react.ReactActivity
 import com.facebook.react.ReactActivityDelegate
