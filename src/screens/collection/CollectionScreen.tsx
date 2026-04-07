@@ -11,7 +11,6 @@ import {
   Dimensions,
   Modal,
   Alert,
-  PermissionsAndroid,
   Platform,
   ScrollView,
 } from 'react-native';
@@ -139,45 +138,33 @@ export default function CollectionScreen() {
     });
   };
 
-  const requestGalleryPermission = async () => {
-    if (Platform.OS !== 'android') {
-      return true;
-    }
-
+  const pickImage = async () => {
     try {
-      if (typeof Platform.Version === 'number' && Platform.Version >= 33) {
-        const result = await PermissionsAndroid.request(
-          PermissionsAndroid.PERMISSIONS.READ_MEDIA_IMAGES
-        );
-        return result === PermissionsAndroid.RESULTS.GRANTED;
+      const result = await launchImageLibrary({
+        mediaType: 'photo',
+        selectionLimit: 1,
+        quality: 1,
+        includeBase64: false,
+      });
+
+      if (result.didCancel) {
+        return;
       }
 
-      const result = await PermissionsAndroid.request(
-        PermissionsAndroid.PERMISSIONS.READ_EXTERNAL_STORAGE
-      );
-      return result === PermissionsAndroid.RESULTS.GRANTED;
+      if (result.errorCode) {
+        Alert.alert('Error', result.errorMessage || 'Could not open gallery.');
+        return;
+      }
+
+      const uri = result.assets?.[0]?.uri;
+
+      if (uri) {
+        setForm(prev => ({ ...prev, imageUri: uri }));
+      } else {
+        Alert.alert('Error', 'Image was not selected.');
+      }
     } catch {
-      return false;
-    }
-  };
-
-  const pickImage = async () => {
-    const granted = await requestGalleryPermission();
-
-    if (!granted) {
-      Alert.alert('Permission needed', 'Please allow access to your gallery.');
-      return;
-    }
-
-    const result = await launchImageLibrary({
-      mediaType: 'photo',
-      selectionLimit: 1,
-      quality: 1,
-    });
-
-    const uri = result.assets?.[0]?.uri;
-    if (uri) {
-      setForm(prev => ({ ...prev, imageUri: uri }));
+      Alert.alert('Error', 'Could not open gallery.');
     }
   };
 
@@ -325,7 +312,11 @@ export default function CollectionScreen() {
                 <View style={s.editorCard}>
                   <TouchableOpacity style={s.imagePicker} onPress={pickImage}>
                     {form.imageUri ? (
-                      <Image source={{ uri: form.imageUri }} style={s.editorImage} resizeMode="cover" />
+                      <Image
+                        source={{ uri: form.imageUri }}
+                        style={s.editorImage}
+                        resizeMode="cover"
+                      />
                     ) : (
                       <View style={s.imagePlaceholderInner}>
                         <Text style={s.imagePlaceholderIcon}>🖼</Text>
@@ -340,7 +331,10 @@ export default function CollectionScreen() {
                       onPress={() => setActiveField('locationName')}
                       activeOpacity={0.8}
                     >
-                      <Text style={[s.fieldValue, !form.locationName && s.fieldPlaceholder]} numberOfLines={1}>
+                      <Text
+                        style={[s.fieldValue, !form.locationName && s.fieldPlaceholder]}
+                        numberOfLines={1}
+                      >
                         {form.locationName || 'Type here...'}
                       </Text>
                     </TouchableOpacity>
@@ -353,7 +347,10 @@ export default function CollectionScreen() {
                       onPress={() => setActiveField('stoneName')}
                       activeOpacity={0.8}
                     >
-                      <Text style={[s.fieldValue, !form.stoneName && s.fieldPlaceholder]} numberOfLines={1}>
+                      <Text
+                        style={[s.fieldValue, !form.stoneName && s.fieldPlaceholder]}
+                        numberOfLines={1}
+                      >
                         {form.stoneName || 'Type here...'}
                       </Text>
                     </TouchableOpacity>
@@ -366,7 +363,10 @@ export default function CollectionScreen() {
                       onPress={() => setActiveField('date')}
                       activeOpacity={0.8}
                     >
-                      <Text style={[s.fieldValue, !form.date && s.fieldPlaceholder]} numberOfLines={1}>
+                      <Text
+                        style={[s.fieldValue, !form.date && s.fieldPlaceholder]}
+                        numberOfLines={1}
+                      >
                         {form.date || 'Type here...'}
                       </Text>
                     </TouchableOpacity>
@@ -376,11 +376,17 @@ export default function CollectionScreen() {
                 <TouchableOpacity
                   style={[
                     s.saveBtn,
-                    (!form.locationName.trim() || !form.stoneName.trim() || !form.date.trim()) &&
+                    (!form.locationName.trim() ||
+                      !form.stoneName.trim() ||
+                      !form.date.trim()) &&
                       s.saveBtnDisabled,
                   ]}
                   onPress={handleSave}
-                  disabled={!form.locationName.trim() || !form.stoneName.trim() || !form.date.trim()}
+                  disabled={
+                    !form.locationName.trim() ||
+                    !form.stoneName.trim() ||
+                    !form.date.trim()
+                  }
                   activeOpacity={0.8}
                 >
                   <Text style={s.saveBtnText}>
@@ -394,7 +400,11 @@ export default function CollectionScreen() {
                       {row.map(key => (
                         <TouchableOpacity
                           key={key}
-                          style={[s.keyBtn, key === ' ' && s.spaceKey, key === '⌫' && s.backspaceKey]}
+                          style={[
+                            s.keyBtn,
+                            key === ' ' && s.spaceKey,
+                            key === '⌫' && s.backspaceKey,
+                          ]}
                           onPress={() => handleKeyboardPress(key)}
                           activeOpacity={0.8}
                         >
@@ -405,7 +415,11 @@ export default function CollectionScreen() {
                   ))}
                 </View>
 
-                <TouchableOpacity style={s.bottomCloseBtn} onPress={closeEditor} activeOpacity={0.8}>
+                <TouchableOpacity
+                  style={s.bottomCloseBtn}
+                  onPress={closeEditor}
+                  activeOpacity={0.8}
+                >
                   <Text style={s.bottomCloseBtnText}>Close</Text>
                 </TouchableOpacity>
               </ScrollView>
@@ -430,7 +444,11 @@ export default function CollectionScreen() {
               </Text>
 
               <View style={s.alertButtons}>
-                <TouchableOpacity style={s.alertConfirmBtn} onPress={confirmDelete} activeOpacity={0.8}>
+                <TouchableOpacity
+                  style={s.alertConfirmBtn}
+                  onPress={confirmDelete}
+                  activeOpacity={0.8}
+                >
                   <Text style={s.alertBtnText}>Confirm</Text>
                 </TouchableOpacity>
 
