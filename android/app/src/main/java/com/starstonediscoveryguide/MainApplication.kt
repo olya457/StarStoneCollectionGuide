@@ -1,4 +1,4 @@
-package com.star.stone.collection.guide
+package com.starstonediscoveryguide
 
 import android.app.Application
 import com.facebook.react.PackageList
