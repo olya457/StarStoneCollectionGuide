@@ -31,5 +31,23 @@ target 'StarStoneCollectionGuide' do
       :mac_catalyst_enabled => false,
       # :ccache_enabled => true
     )
+
+    # fmt 11.0.2 can fail to compile with newer Apple clang versions during archive.
+    # Disable its consteval path until React Native ships the upstream fmt bump.
+    fmt_base_header = File.join(installer.sandbox.root, 'fmt', 'include', 'fmt', 'base.h')
+    if File.exist?(fmt_base_header)
+      contents = File.read(fmt_base_header)
+      patched_contents = contents
+        .gsub("#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 1",
+              "#elif defined(__cpp_consteval)\n#  define FMT_USE_CONSTEVAL 0")
+        .gsub("#elif FMT_GCC_VERSION >= 1002 || FMT_CLANG_VERSION >= 1101\n#  define FMT_USE_CONSTEVAL 1",
+              "#elif FMT_GCC_VERSION >= 1002 || FMT_CLANG_VERSION >= 1101\n#  define FMT_USE_CONSTEVAL 0")
+
+      if patched_contents != contents
+        File.chmod(File.stat(fmt_base_header).mode | 0o200, fmt_base_header)
+        File.write(fmt_base_header, patched_contents)
+        Pod::UI.puts 'Patched fmt 11.0.2 consteval checks for Apple clang compatibility'
+      end
+    end
   end
 end
